@@ -32,7 +32,11 @@ const App: React.FC = () => {
       progress: 65,
       status: 'active',
       createdAt: new Date().toISOString(),
-      tasks: []
+      tasks: [
+        { id: 't1', title: 'Delete social apps for 24h', completed: true, difficulty: 'medium', xp: 50 },
+        { id: 't2', title: 'No screen time after 9 PM', completed: false, difficulty: 'hard', xp: 100 },
+        { id: 't3', title: 'Read 20 pages of a book', completed: true, difficulty: 'easy', xp: 20 },
+      ]
     }
   ]);
 
@@ -43,13 +47,33 @@ const App: React.FC = () => {
       localStorage.setItem('SELFHACK_API_KEY', tempKey.trim());
       setIsKeyValid(true);
       setShowKeyModal(false);
-      window.location.reload(); // Reload to re-init services
+      window.location.reload();
     }
   };
 
   const handleAddHack = (newHack: Hack) => {
     setHacks([newHack, ...hacks]);
     setActiveTab(NavTab.DASHBOARD);
+  };
+
+  const handleToggleTask = (hackId: string, taskId: string) => {
+    setHacks(prevHacks => prevHacks.map(hack => {
+      if (hack.id !== hackId) return hack;
+      const updatedTasks = hack.tasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      );
+      
+      const completedCount = updatedTasks.filter(t => t.completed).length;
+      const newProgress = Math.round((completedCount / updatedTasks.length) * 100);
+      
+      // If task was just completed, add XP
+      const task = updatedTasks.find(t => t.id === taskId);
+      if (task?.completed) {
+        setStats(s => ({ ...s, xp: s.xp + task.xp }));
+      }
+
+      return { ...hack, tasks: updatedTasks, progress: newProgress };
+    }));
   };
 
   const renderContent = () => {
@@ -60,7 +84,7 @@ const App: React.FC = () => {
             <ShieldAlert size={40} className="text-red-500" />
           </div>
           <div>
-            <h3 className="text-xl font-orbitron font-bold">ACCESS_DENIED</h3>
+            <h3 className="text-xl font-orbitron font-bold text-white uppercase italic">Access Denied</h3>
             <p className="text-white/40 text-sm mt-2 max-w-xs mx-auto">Neural processing requires a valid API key. Configure it in settings to proceed.</p>
           </div>
           <button 
@@ -76,7 +100,7 @@ const App: React.FC = () => {
     switch (activeTab) {
       case NavTab.DASHBOARD: return <Dashboard stats={stats} hacks={hacks} />;
       case NavTab.GOALS: return <Goals goals={goals} onAddGoal={(g) => setGoals([...goals, {...g, id: Math.random().toString(), completed: false, createdAt: new Date().toISOString()}])} onToggleGoal={(id) => setGoals(goals.map(g => g.id === id ? {...g, completed: !g.completed} : g))} onDeleteGoal={(id) => setGoals(goals.filter(g => g.id !== id))} />;
-      case NavTab.HACK_ENGINE: return <HackEngine onAddHack={handleAddHack} />;
+      case NavTab.HACK_ENGINE: return <HackEngine hacks={hacks} onAddHack={handleAddHack} onToggleTask={handleToggleTask} />;
       case NavTab.MENTOR: return <MentorChat />;
       case NavTab.INVENTORY: return <Inventory />;
       default: return <Dashboard stats={stats} hacks={hacks} />;
@@ -87,7 +111,6 @@ const App: React.FC = () => {
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
       {renderContent()}
 
-      {/* API Key Modal */}
       {showKeyModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="glass w-full max-w-md rounded-3xl p-8 border-cyan-500/30 relative shadow-2xl">
@@ -97,7 +120,7 @@ const App: React.FC = () => {
                 <Key size={32} className="text-cyan-400" />
               </div>
               <div>
-                <h2 className="text-2xl font-orbitron font-black italic italic">NEURAL ACCESS</h2>
+                <h2 className="text-2xl font-orbitron font-black italic">NEURAL ACCESS</h2>
                 <p className="text-white/40 text-xs mt-1">Provide your Gemini API Key to enable AI features.</p>
               </div>
               <input 
@@ -113,19 +136,10 @@ const App: React.FC = () => {
               >
                 Establish Link
               </button>
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
-                className="text-[10px] text-cyan-400/60 hover:text-cyan-400 uppercase font-bold tracking-widest mt-2"
-              >
-                Get Key from AI Studio
-              </a>
             </div>
           </div>
         </div>
       )}
-      
-      {/* Settings Gear (hidden FAB) */}
       <button 
         onClick={() => setShowKeyModal(true)}
         className="fixed top-4 right-20 z-[60] text-white/20 hover:text-cyan-400 transition-colors"
