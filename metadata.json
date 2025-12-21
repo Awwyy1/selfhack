@@ -1,0 +1,7 @@
+{
+  "name": "SelfHack",
+  "description": "AI-powered reality hacking coach to gamify your life goals and maximize your potential.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
