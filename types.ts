@@ -47,5 +47,6 @@ export enum NavTab {
   HACK_ENGINE = 'hack_engine',
   MENTOR = 'mentor',
   INVENTORY = 'inventory',
-  SUBSCRIPTION = 'subscription'
+  SUBSCRIPTION = 'subscription',
+  PROFILE = 'profile'
 }
