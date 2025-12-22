@@ -148,19 +148,21 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
                 <button
                   key={task.id}
                   onClick={() => onToggleTask(selectedHack.id, task.id)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group ${
                     task.completed 
-                      ? 'bg-green-500/10 border-green-500/30 opacity-60' 
+                      ? 'bg-green-500/10 border-green-500/30 opacity-60 animate-success' 
                       : 'bg-white/80 dark:bg-white/5 border-black/5 dark:border-white/5 hover:border-cyan-500/30'
                   }`}
                 >
-                  <div className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${
-                    task.completed ? 'bg-green-600 dark:bg-green-500 border-green-600 dark:border-green-500 text-white dark:text-black' : 'border-gray-300 dark:border-white/20'
+                  <div className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
+                    task.completed 
+                      ? 'bg-green-600 dark:bg-green-500 border-green-600 dark:border-green-500 text-white dark:text-black' 
+                      : 'border-gray-300 dark:border-white/20 group-hover:border-cyan-500/50'
                   }`}>
-                    {task.completed && <CheckCircle2 size={16} />}
+                    {task.completed && <CheckCircle2 size={16} className="animate-check" />}
                   </div>
                   <div className="flex-1">
-                    <p className={`text-sm font-bold ${task.completed ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-900 dark:text-white'}`}>{task.title}</p>
+                    <p className={`text-sm font-bold transition-all ${task.completed ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-900 dark:text-white'}`}>{task.title}</p>
                     <div className="flex gap-2 mt-1">
                       <span className="text-[8px] uppercase font-mono text-gray-400 dark:text-white/30">{task.difficulty}</span>
                       <span className="text-[8px] uppercase font-mono text-cyan-600/60 dark:text-cyan-400/60">+{task.xp} XP</span>
