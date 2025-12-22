@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './views/Dashboard';
@@ -6,6 +7,7 @@ import MentorChat from './views/MentorChat';
 import Inventory from './views/Inventory';
 import Goals from './views/Goals';
 import Subscription from './views/Subscription';
+import UserProfile from './views/UserProfile';
 import { NavTab, UserStats, Hack, Goal } from './types';
 import { Key, ShieldAlert, X } from 'lucide-react';
 
@@ -14,6 +16,8 @@ const App: React.FC = () => {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [tempKey, setTempKey] = useState('');
   const [isKeyValid, setIsKeyValid] = useState(!!localStorage.getItem('SELFHACK_API_KEY') || !!process.env.API_KEY);
+  
+  const [userName, setUserName] = useState(() => localStorage.getItem('SELFHACK_USERNAME') || 'NEURAL_OPTIMIZER');
 
   const [stats, setStats] = useState<UserStats>({
     level: 12,
@@ -48,6 +52,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('SELFHACK_GOALS', JSON.stringify(goals));
   }, [goals]);
+  
+  useEffect(() => {
+    localStorage.setItem('SELFHACK_USERNAME', userName);
+    setStats(prev => ({ ...prev, rank: userName }));
+  }, [userName]);
 
   const handleSaveKey = () => {
     if (tempKey.trim()) {
@@ -120,7 +129,7 @@ const App: React.FC = () => {
     }
 
     switch (activeTab) {
-      case NavTab.DASHBOARD: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
+      case NavTab.DASHBOARD: return <Dashboard stats={{...stats, rank: userName}} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
       case NavTab.GOALS: return (
         <Goals 
           goals={goals} 
@@ -133,7 +142,8 @@ const App: React.FC = () => {
       case NavTab.MENTOR: return <MentorChat />;
       case NavTab.INVENTORY: return <Inventory onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
       case NavTab.SUBSCRIPTION: return <Subscription onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
-      default: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
+      case NavTab.PROFILE: return <UserProfile userName={userName} onUpdateName={setUserName} onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
+      default: return <Dashboard stats={{...stats, rank: userName}} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
     }
   };
 
