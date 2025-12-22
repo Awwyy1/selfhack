@@ -9,7 +9,7 @@ const MentorChat: React.FC = () => {
     {
       id: '1',
       role: 'assistant',
-      content: 'System ready. I am Neural-X. Input your status or request optimization strategy.',
+      content: 'System ready. I am Hack. Input your status or request optimization strategy.',
       timestamp: new Date()
     }
   ]);
@@ -66,8 +66,8 @@ const MentorChat: React.FC = () => {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-black animate-pulse" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-gray-900 dark:text-white">NEURAL-X</h3>
-            <p className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono tracking-widest">COACH_VER_3.5</p>
+            <h3 className="font-bold text-sm text-gray-900 dark:text-white">HACK</h3>
+            <p className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono tracking-widest">Coach_ver_3.5</p>
           </div>
         </div>
         <div className="text-[10px] text-gray-400 dark:text-white/30 font-mono uppercase">LATENCY: 12ms</div>
@@ -106,7 +106,7 @@ const MentorChat: React.FC = () => {
               <Loader2 size={16} className="animate-spin" />
             </div>
             <div className="bg-white/80 dark:bg-white/5 text-gray-500 dark:text-white/40 rounded-2xl rounded-tl-none p-3 text-sm italic border border-black/5 dark:border-white/5">
-              Processing neural patterns...
+              Processing hack patterns...
             </div>
           </div>
         )}
