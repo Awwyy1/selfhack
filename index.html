@@ -16,6 +16,15 @@
                         mono: ['JetBrains Mono', 'monospace'],
                         sans: ['Inter', 'sans-serif'],
                     },
+                    animation: {
+                        'scan-line': 'scan 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { top: '0%' },
+                            '100%': { top: '100%' },
+                        }
+                    }
                 }
             }
         }
@@ -67,6 +76,15 @@
         .dark input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
         }
+        @keyframes scan {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+        .animate-scan-line {
+            animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
     </style>
 <script type="importmap">
 {
@@ -83,6 +101,5 @@
 </head>
 <body class="antialiased">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
