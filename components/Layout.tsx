@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { NavTab } from '../types';
 import { LayoutDashboard, Zap, MessageSquare, Briefcase, User, Target, Sun, Moon } from 'lucide-react';
 
@@ -35,7 +35,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           <div className="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center shadow-lg">
             <Zap size={18} className="text-white dark:text-black fill-current" />
           </div>
-          <span className="font-orbitron font-black text-xl tracking-tighter neon-glow text-cyan-600 dark:text-cyan-400">SELFHACK</span>
+          <span 
+            onClick={() => setActiveTab(NavTab.DASHBOARD)}
+            className="font-orbitron font-black text-xl tracking-tighter neon-glow text-cyan-600 dark:text-cyan-400 cursor-pointer"
+          >
+            SELFHACK
+          </span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -52,9 +57,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
               <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-[0.2em] font-mono opacity-60">Status</span>
               <span className="text-[11px] font-mono font-bold text-green-600 dark:text-green-400">ONLINE_CORE</span>
             </div>
-            <div className="w-9 h-9 rounded-full border border-black/10 dark:border-white/10 glass flex items-center justify-center hover:border-cyan-500/30 transition-colors">
-              <User size={18} className="text-slate-500 dark:text-white/60" />
-            </div>
+            <button 
+              onClick={() => setActiveTab(NavTab.PROFILE)}
+              className={`w-9 h-9 rounded-full border glass flex items-center justify-center transition-all ${
+                activeTab === NavTab.PROFILE 
+                ? 'border-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.4)] text-cyan-500' 
+                : 'border-black/10 dark:border-white/10 text-slate-500 dark:text-white/60 hover:border-cyan-500/30'
+              }`}
+            >
+              <User size={18} />
+            </button>
           </div>
         </div>
       </header>
