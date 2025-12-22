@@ -1,5 +1,5 @@
 
-# ⚡ SELFHACK: Reality Hacking OS
+# SELFHACK: Reality Hacking OS
 
 ![SelfHack Banner](https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000)
 
@@ -19,12 +19,6 @@
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 - **Charts**: Recharts
-
-## 💾 Installation (Manual)
-
-1. Clone the repository.
-2. Ensure you have an `API_KEY` for Google Gemini.
-3. Serve the directory using any static web server (e.g., `npx serve`).
 
 ---
 *Developed for the next generation of high-performers.*
