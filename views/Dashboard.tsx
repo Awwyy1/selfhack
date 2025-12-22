@@ -1,6 +1,7 @@
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { UserStats, Hack } from '../types';
-import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp } from 'lucide-react';
+import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp, Quote } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 
 const chartData = [
@@ -11,6 +12,16 @@ const chartData = [
   { name: '05', xp: 800 },
   { name: '06', xp: 700 },
   { name: '07', xp: 1100 },
+];
+
+const CURATED_QUOTES = [
+  { text: "The best way to predict the future is to create it.", author: "Peter Drucker" },
+  { text: "Optimization is not a destination, it's a continuous state of being.", author: "Neural-X Core" },
+  { text: "Efficiency is doing things right; effectiveness is doing the right things.", author: "Peter Drucker" },
+  { text: "Your mind is for having ideas, not holding them.", author: "David Allen" },
+  { text: "The code of reality is yours to rewrite. Start with one line today.", author: "System Protocol" },
+  { text: "Focus is the ultimate currency in the age of digital noise.", author: "Unknown" },
+  { text: "Great things are done by a series of small things brought together.", author: "Vincent Van Gogh" }
 ];
 
 interface DashboardProps {
@@ -28,13 +39,19 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
     ? Math.round(hacks.reduce((acc, h) => acc + h.progress, 0) / hacks.length) 
     : 0;
 
+  // Select a quote based on the day of the year
+  const dailyQuote = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return CURATED_QUOTES[dayOfYear % CURATED_QUOTES.length];
+  }, []);
+
   return (
     <div className="space-y-5 animate-in fade-in duration-700">
       
-      {/* --- HEADER SECTION (REDUCED BY 20%) --- */}
+      {/* --- HEADER SECTION --- */}
       <div className="space-y-3">
         
-        {/* Profile Identity Card - Compact Version */}
+        {/* Profile Identity Card */}
         <section className="glass rounded-[2rem] p-4 flex items-center gap-5 relative overflow-hidden border-cyan-500/10">
           <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 blur-[40px] rounded-full" />
           
@@ -60,7 +77,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
           </div>
         </section>
 
-        {/* Experience Section - Compact & Full Width */}
+        {/* Experience Section */}
         <div className="glass rounded-[1.75rem] p-4 flex flex-col justify-between bg-white/30 dark:bg-white/[0.02]">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-2">
@@ -88,7 +105,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
           </div>
         </div>
 
-        {/* Mini Metrics Row - Streak Integrated here */}
+        {/* Mini Metrics Row */}
         <div className="grid grid-cols-4 gap-3">
           <MiniStat icon={<CheckCircle2 size={16} />} color="text-green-500" value={stats.hacksCompleted} label="Completed" />
           <MiniStat icon={<LayoutGrid size={16} />} color="text-cyan-500" value={activeHacksCount} label="Active" />
@@ -97,7 +114,28 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
         </div>
 
       </div>
-      {/* --- END HEADER SECTION --- */}
+
+      {/* Neural Reflection (Daily Quote) - Elegant & Subtle */}
+      <section className="px-1">
+        <div className="relative glass rounded-2xl p-4 overflow-hidden border-l-2 border-l-fuchsia-500/50 bg-gradient-to-r from-fuchsia-500/[0.03] to-transparent">
+          <div className="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
+            <Quote size={80} className="text-fuchsia-500" />
+          </div>
+          <div className="flex gap-3 items-start relative z-10">
+            <div className="mt-0.5 text-fuchsia-500/40">
+              <Quote size={14} fill="currentColor" />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-mono font-medium leading-relaxed italic text-slate-700 dark:text-slate-300 tracking-tight">
+                "{dailyQuote.text}"
+              </p>
+              <p className="text-[8px] font-mono text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em] font-black">
+                — {dailyQuote.author}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Upgrade CTA */}
       <button 
@@ -195,7 +233,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
         )}
       </section>
 
-      {/* XP Mechanics */}
+      {/* System Intel */}
       <section className="p-5 glass rounded-2xl bg-slate-50 dark:bg-white/[0.01]">
         <div className="flex items-start gap-3">
           <div className="mt-1 text-slate-400 dark:text-slate-600"><Info size={18} /></div>
