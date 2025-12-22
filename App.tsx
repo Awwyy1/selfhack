@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './views/Dashboard';
@@ -19,13 +18,17 @@ const App: React.FC = () => {
   
   const [userName, setUserName] = useState(() => localStorage.getItem('SELFHACK_USERNAME') || 'NEURAL_OPTIMIZER');
 
-  const [stats, setStats] = useState<UserStats>({
-    level: 12,
-    xp: 2450,
-    xpToNextLevel: 5000,
-    streak: 7,
-    hacksCompleted: 14,
-    rank: 'NEURAL_OPTIMIZER'
+  const [stats, setStats] = useState<UserStats>(() => {
+    const saved = localStorage.getItem('SELFHACK_STATS');
+    return saved ? JSON.parse(saved) : {
+      level: 12,
+      xp: 2450,
+      xpToNextLevel: 5000,
+      streak: 7,
+      hacksCompleted: 14,
+      rank: 'NEURAL_OPTIMIZER',
+      lastCheckIn: ''
+    };
   });
 
   const [hacks, setHacks] = useState<Hack[]>([
@@ -57,6 +60,21 @@ const App: React.FC = () => {
     localStorage.setItem('SELFHACK_USERNAME', userName);
     setStats(prev => ({ ...prev, rank: userName }));
   }, [userName]);
+
+  useEffect(() => {
+    localStorage.setItem('SELFHACK_STATS', JSON.stringify(stats));
+  }, [stats]);
+
+  const handleCheckIn = (assessment: { energy: number, focus: number, mood: number }) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    setStats(prev => ({
+      ...prev,
+      xp: prev.xp + 50,
+      streak: prev.streak + 1,
+      lastCheckIn: todayStr
+    }));
+    console.debug("Check-in data stored:", assessment);
+  };
 
   const handleSaveKey = () => {
     if (tempKey.trim()) {
@@ -129,7 +147,7 @@ const App: React.FC = () => {
     }
 
     switch (activeTab) {
-      case NavTab.DASHBOARD: return <Dashboard stats={{...stats, rank: userName}} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
+      case NavTab.DASHBOARD: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} />;
       case NavTab.GOALS: return (
         <Goals 
           goals={goals} 
@@ -143,7 +161,7 @@ const App: React.FC = () => {
       case NavTab.INVENTORY: return <Inventory onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
       case NavTab.SUBSCRIPTION: return <Subscription onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
       case NavTab.PROFILE: return <UserProfile userName={userName} onUpdateName={setUserName} onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
-      default: return <Dashboard stats={{...stats, rank: userName}} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
+      default: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} />;
     }
   };
 
