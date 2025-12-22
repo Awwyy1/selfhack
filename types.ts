@@ -32,6 +32,7 @@ export interface UserStats {
   streak: number;
   hacksCompleted: number;
   rank: string;
+  lastCheckIn?: string;
 }
 
 export interface Message {
