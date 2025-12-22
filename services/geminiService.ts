@@ -1,5 +1,4 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Hack } from "../types";
 
 export class GeminiService {
@@ -74,14 +73,36 @@ export class GeminiService {
         1. SMART METHODOLOGY: Always guide users to make their goals Specific, Measurable, Achievable, Relevant, and Time-bound.
         2. COACHING PRESENCE: Use powerful open-ended questions to evoke awareness. Do not just give advice; facilitate the user's own discovery.
         3. TONE: Professional, structured, supportive, and motivating. Use subtle cybernetic metaphors (optimization, framework, synchronization) but maintain high-level human professional standards.
-        4. STRUCTURE: Keep responses concise but impact-heavy. End sessions with a clear "Commitment Check".
-        
-        If a user is vague, ask: "How exactly will you measure success in this neural sector?" or "What specific parameters define 'completion' for this objective?"`,
+        4. STRUCTURE: Keep responses concise but impact-heavy. End sessions with a clear "Commitment Check".`,
       },
     });
 
     const result = await chat.sendMessage({ message });
     return result.text;
+  }
+
+  connectLive(voiceName: string, callbacks: {
+    onopen: () => void;
+    onmessage: (message: any) => void;
+    onerror: (e: any) => void;
+    onclose: (e: any) => void;
+  }) {
+    // Re-init to ensure fresh key
+    this.init();
+    
+    return this.client.live.connect({
+      model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+      callbacks,
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+        },
+        systemInstruction: 'You are Neural-X, a high-performance reality hacking coach. Respond concisely, use cybernetic metaphors. Focus on optimization and sovereignty. Be supportive but professional.',
+        outputAudioTranscription: {},
+        inputAudioTranscription: {},
+      },
+    });
   }
 }
 
