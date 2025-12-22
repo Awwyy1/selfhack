@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { UserStats, Hack, NavTab } from '../types';
-import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle } from 'lucide-react';
+import { UserStats, Hack } from '../types';
+import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 
-const data = [
+const chartData = [
   { name: '01', xp: 400 },
   { name: '02', xp: 300 },
   { name: '03', xp: 600 },
@@ -22,40 +21,85 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
   const isDark = document.documentElement.classList.contains('dark');
+  
+  // Dynamic calculations
+  const activeHacksCount = hacks.filter(h => h.status === 'active').length;
+  const avgProgress = hacks.length > 0 
+    ? Math.round(hacks.reduce((acc, h) => acc + h.progress, 0) / hacks.length) 
+    : 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Profile Overview */}
-      <section className="glass rounded-3xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 dark:bg-cyan-500/5 blur-[80px] rounded-full" />
-        <div className="relative z-10 space-y-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-4xl font-orbitron font-black uppercase italic tracking-tighter leading-none text-slate-900 dark:text-white">Level {stats.level}</h2>
-              <p className="text-cyan-600 dark:text-cyan-400 font-mono text-[10px] tracking-[0.3em] uppercase mt-1">{stats.rank}</p>
+    <div className="space-y-5 animate-in fade-in duration-700">
+      
+      {/* --- HEADER SECTION (REDUCED BY 20%) --- */}
+      <div className="space-y-3">
+        
+        {/* Profile Identity Card - Compact Version */}
+        <section className="glass rounded-[2rem] p-4 flex items-center gap-5 relative overflow-hidden border-cyan-500/10">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 blur-[40px] rounded-full" />
+          
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-fuchsia-600 p-[2px] shadow-[0_0_15px_rgba(34,211,238,0.25)]">
+              <div className="w-full h-full rounded-[calc(1rem+2px)] bg-slate-900 flex items-center justify-center overflow-hidden relative">
+                <Zap size={24} className="text-cyan-400 fill-cyan-400/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 to-transparent" />
+              </div>
             </div>
-            <div className="flex gap-2">
-              <StatBadge icon={<Flame size={14} className="text-orange-500" />} value={stats.streak} />
-              <StatBadge icon={<Trophy size={14} className="text-yellow-500" />} value={stats.hacksCompleted} />
+            <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-fuchsia-600 border-[3px] border-slate-50 dark:border-[#020202] flex items-center justify-center text-[10px] font-black text-white shadow-lg">
+              {stats.level}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-              <span>Neural Progress: {stats.xp} / {stats.xpToNextLevel}</span>
-              <span>{Math.round((stats.xp / stats.xpToNextLevel) * 100)}%</span>
+          <div className="flex-1">
+            <h2 className="text-2xl font-orbitron font-black uppercase tracking-tighter text-slate-900 dark:text-white leading-none italic">
+              {stats.rank.replace('_', ' ')}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 font-mono text-[9px] tracking-[0.2em] uppercase mt-1.5 font-bold opacity-70">
+              Level {stats.level} Explorer
+            </p>
+          </div>
+        </section>
+
+        {/* Experience Section - Compact & Full Width */}
+        <div className="glass rounded-[1.75rem] p-4 flex flex-col justify-between bg-white/30 dark:bg-white/[0.02]">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-cyan-500/10 rounded-lg text-cyan-500">
+                <Star size={14} className="fill-current" />
+              </div>
+              <span className="text-[9px] font-orbitron font-black text-slate-800 dark:text-white uppercase tracking-widest">Experience</span>
             </div>
-            <div className="h-2.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden p-[1px] border border-black/5 dark:border-white/5">
+            <div className="text-right">
+              <span className="text-base font-mono font-black text-slate-900 dark:text-white">{stats.xp} /</span>
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-600 ml-1">{stats.xpToNextLevel} XP</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="h-2 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden p-[1px] border border-black/5 dark:border-white/5">
               <div 
-                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all duration-1000 rounded-full" 
+                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)] transition-all duration-1000 rounded-full" 
                 style={{ width: `${(stats.xp / stats.xpToNextLevel) * 100}%` }}
               />
             </div>
+            <p className="text-[8px] font-mono text-center text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold">
+              {stats.xpToNextLevel - stats.xp} XP to Level {stats.level + 1}
+            </p>
           </div>
         </div>
-      </section>
 
-      {/* Upgrade CTA (Variant A) */}
+        {/* Mini Metrics Row - Streak Integrated here */}
+        <div className="grid grid-cols-4 gap-3">
+          <MiniStat icon={<CheckCircle2 size={16} />} color="text-green-500" value={stats.hacksCompleted} label="Completed" />
+          <MiniStat icon={<LayoutGrid size={16} />} color="text-cyan-500" value={activeHacksCount} label="Active" />
+          <MiniStat icon={<TrendingUp size={16} />} color="text-fuchsia-500" value={`${avgProgress}%`} label="Rate" />
+          <MiniStat icon={<Flame size={16} className="fill-current" />} color="text-orange-500" value={stats.streak} label="Streak" />
+        </div>
+
+      </div>
+      {/* --- END HEADER SECTION --- */}
+
+      {/* Upgrade CTA */}
       <button 
         onClick={onUpgrade}
         className="w-full glass rounded-2xl p-4 flex items-center justify-between group hover:border-fuchsia-500/30 transition-all bg-gradient-to-r from-fuchsia-500/5 to-transparent border-fuchsia-500/10 shadow-sm"
@@ -82,7 +126,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
         </div>
         <div className="h-44 w-full -ml-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorXp" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4}/>
@@ -167,10 +211,15 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
   );
 };
 
-const StatBadge: React.FC<{ icon: React.ReactNode, value: number }> = ({ icon, value }) => (
-  <div className="flex flex-col items-center glass min-w-[48px] py-2 rounded-xl bg-white dark:bg-white/5">
-    {icon}
-    <span className="text-[11px] font-black font-orbitron mt-0.5 text-slate-900 dark:text-white">{value}</span>
+const MiniStat: React.FC<{ icon: React.ReactNode, color: string, value: string | number, label: string }> = ({ icon, color, value, label }) => (
+  <div className="glass rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 bg-white/40 dark:bg-white/[0.02]">
+    <div className={`${color} opacity-80 mb-1`}>{icon}</div>
+    <div className="text-sm font-orbitron font-black text-slate-900 dark:text-white leading-none">
+      {value}
+    </div>
+    <div className="text-[8px] font-mono font-bold text-slate-400 dark:text-slate-600 uppercase tracking-tighter">
+      {label}
+    </div>
   </div>
 );
 
