@@ -1,7 +1,7 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { UserStats, Hack } from '../types';
-import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp, Quote } from 'lucide-react';
+import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp, Quote, Activity, Battery, Crosshair, Brain } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 
 const chartData = [
@@ -28,29 +28,126 @@ interface DashboardProps {
   stats: UserStats;
   hacks: Hack[];
   onUpgrade: () => void;
+  onCheckIn: (data: { energy: number, focus: number, mood: number }) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
+const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade, onCheckIn }) => {
   const isDark = document.documentElement.classList.contains('dark');
-  
+  const [isScanning, setIsScanning] = useState(false);
+  const [checkInStep, setCheckInStep] = useState(0); // 0: hidden, 1: assessing, 2: scanning
+  const [assessment, setAssessment] = useState({ energy: 5, focus: 5, mood: 5 });
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const needsCheckIn = stats.lastCheckIn !== todayStr;
+
+  const playSyncSound = useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 1);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.2);
+    } catch (e) {}
+  }, []);
+
+  const handleInitializeSync = () => {
+    setCheckInStep(1);
+  };
+
+  const handleFinalizeSync = () => {
+    setIsScanning(true);
+    setCheckInStep(2);
+    playSyncSound();
+    
+    // Animation duration
+    setTimeout(() => {
+      setIsScanning(false);
+      onCheckIn(assessment);
+      setCheckInStep(0);
+    }, 2000);
+  };
+
   // Dynamic calculations
   const activeHacksCount = hacks.filter(h => h.status === 'active').length;
   const avgProgress = hacks.length > 0 
     ? Math.round(hacks.reduce((acc, h) => acc + h.progress, 0) / hacks.length) 
     : 0;
 
-  // Select a quote based on the day of the year
   const dailyQuote = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     return CURATED_QUOTES[dayOfYear % CURATED_QUOTES.length];
   }, []);
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-700">
+    <div className="space-y-5 animate-in fade-in duration-700 relative">
       
-      {/* --- HEADER SECTION --- */}
+      {/* GLOBAL SCANNING OVERLAY */}
+      {isScanning && (
+        <div className="fixed inset-0 z-[200] pointer-events-none">
+          <div className="w-full h-1 bg-cyan-400 shadow-[0_0_30px_#22d3ee,0_0_10px_#22d3ee] absolute animate-scan-line" />
+          <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
+        </div>
+      )}
+
+      {/* --- NEURAL SYNC WIDGET --- */}
+      {needsCheckIn && checkInStep === 0 && (
+        <section className="animate-in slide-in-from-top-4 duration-500">
+          <div className="glass rounded-[2rem] p-5 border-l-4 border-l-red-500 bg-red-500/[0.03] flex items-center justify-between group">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 animate-pulse">
+                <Activity size={24} />
+              </div>
+              <div className="text-left">
+                <h4 className="text-xs font-black uppercase text-red-700 dark:text-red-400 tracking-widest font-orbitron">Neural Desync</h4>
+                <p className="text-[9px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 uppercase font-bold tracking-tight">Identity verification required</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleInitializeSync}
+              className="px-5 py-2.5 bg-red-500 text-white dark:text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-red-500/20"
+            >
+              Sync Now
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* --- ASSESSMENT RITUAL --- */}
+      {checkInStep === 1 && (
+        <section className="animate-in zoom-in-95 duration-300">
+          <div className="glass rounded-[2rem] p-6 border-cyan-500/30 bg-white/80 dark:bg-black/40 shadow-2xl space-y-6">
+            <div className="text-center space-y-1">
+              <h3 className="text-sm font-orbitron font-black text-slate-900 dark:text-white uppercase italic tracking-widest">Biometric Assessment</h3>
+              <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Input current state parameters</p>
+            </div>
+
+            <div className="space-y-5">
+              <AssessmentSlider icon={<Battery size={14}/>} label="Energy" value={assessment.energy} onChange={(v) => setAssessment({...assessment, energy: v})} />
+              <AssessmentSlider icon={<Crosshair size={14}/>} label="Focus" value={assessment.focus} onChange={(v) => setAssessment({...assessment, focus: v})} />
+              <AssessmentSlider icon={<Brain size={14}/>} label="Mood" value={assessment.mood} onChange={(v) => setAssessment({...assessment, mood: v})} />
+            </div>
+
+            <button 
+              onClick={handleFinalizeSync}
+              className="w-full py-4 bg-gradient-to-r from-cyan-600 to-cyan-400 text-white font-black uppercase tracking-[0.2em] text-[11px] rounded-2xl hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all flex items-center justify-center gap-2 group italic"
+            >
+              <Zap size={18} className="group-hover:rotate-12 transition-transform" />
+              Establish Neural Link
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* --- NORMAL DASHBOARD CONTENT --- */}
       <div className="space-y-3">
-        
         {/* Profile Identity Card */}
         <section className="glass rounded-[2rem] p-4 flex items-center gap-5 relative overflow-hidden border-cyan-500/10">
           <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 blur-[40px] rounded-full" />
@@ -115,7 +212,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
 
       </div>
 
-      {/* Neural Reflection (Daily Quote) - Elegant & Subtle */}
+      {/* Neural Reflection (Daily Quote) */}
       <section className="px-1">
         <div className="relative glass rounded-2xl p-4 overflow-hidden border-l-2 border-l-fuchsia-500/50 bg-gradient-to-r from-fuchsia-500/[0.03] to-transparent">
           <div className="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
@@ -208,7 +305,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
         {hacks.length > 0 ? (
           hacks.map(hack => (
             <div key={hack.id} className="glass rounded-2xl p-4 flex items-center gap-4 hover:border-cyan-500/30 transition-all cursor-pointer group active:scale-[0.98]">
-              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-black/5 dark:border-white/5 group-hover:bg-cyan-500/10 transition-all">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-black/5 dark:border-white/10 group-hover:bg-cyan-500/10 transition-all">
                 <Zap size={22} className="text-cyan-600 dark:text-cyan-400" />
               </div>
               <div className="flex-1">
@@ -232,22 +329,27 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade }) => {
           </div>
         )}
       </section>
-
-      {/* System Intel */}
-      <section className="p-5 glass rounded-2xl bg-slate-50 dark:bg-white/[0.01]">
-        <div className="flex items-start gap-3">
-          <div className="mt-1 text-slate-400 dark:text-slate-600"><Info size={18} /></div>
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-[0.2em]">System Intel</h4>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-mono">
-              Execute objectives to gain XP. High-intensity tasks yield <span className="text-cyan-600 dark:text-cyan-400 font-bold">Superior rewards</span>. Maintaining streaks preserves neural stability.
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };
+
+const AssessmentSlider: React.FC<{ icon: React.ReactNode, label: string, value: number, onChange: (v: number) => void }> = ({ icon, label, value, onChange }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+        {icon}
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{label}</span>
+      </div>
+      <span className="text-[10px] font-mono font-black text-cyan-600 dark:text-cyan-400">{value}/10</span>
+    </div>
+    <input 
+      type="range" min="1" max="10" step="1" 
+      value={value} 
+      onChange={(e) => onChange(parseInt(e.target.value))}
+      className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+    />
+  </div>
+);
 
 const MiniStat: React.FC<{ icon: React.ReactNode, color: string, value: string | number, label: string }> = ({ icon, color, value, label }) => (
   <div className="glass rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 bg-white/40 dark:bg-white/[0.02]">
