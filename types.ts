@@ -1,4 +1,3 @@
-
 export interface Task {
   id: string;
   title: string;
@@ -20,6 +19,7 @@ export interface Hack {
 export interface Goal {
   id: string;
   title: string;
+  description?: string;
   deadline: string;
   completed: boolean;
   createdAt: string;
@@ -49,5 +49,9 @@ export enum NavTab {
   MENTOR = 'mentor',
   INVENTORY = 'inventory',
   SUBSCRIPTION = 'subscription',
-  PROFILE = 'profile'
+  PROFILE = 'profile',
+  STAT_COMPLETED = 'stat_completed',
+  STAT_ACTIVE = 'stat_active',
+  STAT_RATE = 'stat_rate',
+  STAT_STREAK = 'stat_streak'
 }
