@@ -7,6 +7,7 @@ import Inventory from './views/Inventory';
 import Goals from './views/Goals';
 import Subscription from './views/Subscription';
 import UserProfile from './views/UserProfile';
+import StatDetail from './views/StatDetail';
 import { NavTab, UserStats, Hack, Goal } from './types';
 import { Key, ShieldAlert, X } from 'lucide-react';
 
@@ -125,6 +126,10 @@ const App: React.FC = () => {
     });
   };
 
+  const handleUpdateGoal = (updatedGoal: Goal) => {
+    setGoals(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+  };
+
   const renderContent = () => {
     if (!isKeyValid && (activeTab === NavTab.HACK_ENGINE || activeTab === NavTab.MENTOR)) {
       return (
@@ -147,13 +152,14 @@ const App: React.FC = () => {
     }
 
     switch (activeTab) {
-      case NavTab.DASHBOARD: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} />;
+      case NavTab.DASHBOARD: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} onNavigate={setActiveTab} />;
       case NavTab.GOALS: return (
         <Goals 
           goals={goals} 
           onAddGoal={(g) => setGoals([...goals, {...g, id: Math.random().toString(36).substr(2, 9), completed: false, createdAt: new Date().toISOString()}])} 
           onToggleGoal={handleToggleGoal} 
           onDeleteGoal={(id) => setGoals(goals.filter(g => g.id !== id))} 
+          onUpdateGoal={handleUpdateGoal}
         />
       );
       case NavTab.HACK_ENGINE: return <HackEngine hacks={hacks} onAddHack={handleAddHack} onToggleTask={handleToggleTask} />;
@@ -161,7 +167,12 @@ const App: React.FC = () => {
       case NavTab.INVENTORY: return <Inventory onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} />;
       case NavTab.SUBSCRIPTION: return <Subscription onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
       case NavTab.PROFILE: return <UserProfile userName={userName} onUpdateName={setUserName} onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
-      default: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} />;
+      case NavTab.STAT_COMPLETED:
+      case NavTab.STAT_ACTIVE:
+      case NavTab.STAT_RATE:
+      case NavTab.STAT_STREAK:
+        return <StatDetail tab={activeTab} stats={stats} hacks={hacks} onBack={() => setActiveTab(NavTab.DASHBOARD)} />;
+      default: return <Dashboard stats={stats} hacks={hacks} onUpgrade={() => setActiveTab(NavTab.SUBSCRIPTION)} onCheckIn={handleCheckIn} onNavigate={setActiveTab} />;
     }
   };
 
