@@ -1,26 +1,44 @@
 import React, { useState, useMemo } from 'react';
 import { Goal } from '../types';
-import { Target, Calendar, Plus, Trash2, CheckCircle, Clock, AlertTriangle, ShieldAlert, Zap } from 'lucide-react';
+import { Target, Calendar, Plus, Trash2, CheckCircle, Clock, AlertTriangle, ShieldAlert, Zap, ChevronRight, ChevronDown, Edit3, Save, X, AlertCircle } from 'lucide-react';
 
 interface GoalsProps {
   goals: Goal[];
   onAddGoal: (goal: Omit<Goal, 'id' | 'completed' | 'createdAt'>) => void;
   onToggleGoal: (id: string) => void;
   onDeleteGoal: (id: string) => void;
+  onUpdateGoal: (goal: Goal) => void;
 }
 
-const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteGoal }) => {
+const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteGoal, onUpdateGoal }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
+  
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Partial<Goal>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !deadline) return;
-    onAddGoal({ title, deadline });
+    onAddGoal({ title, description, deadline });
     setTitle('');
+    setDescription('');
     setDeadline('');
     setIsAdding(false);
+  };
+
+  const handleEditSave = (goal: Goal) => {
+    onUpdateGoal({ ...goal, ...editData } as Goal);
+    setEditingId(null);
+  };
+
+  const cancelDelete = () => {
+    setConfirmDeleteId(null);
+    setExpandedId(null);
   };
 
   const getDaysLeft = (date: string) => {
@@ -109,6 +127,15 @@ const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteG
             />
           </div>
           <div className="space-y-2">
+            <label className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest">Description (optional)</label>
+            <textarea 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Detailed neural metadata..."
+              className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:border-cyan-500/50 font-mono text-slate-900 dark:text-white h-24 resize-none"
+            />
+          </div>
+          <div className="space-y-2">
             <label className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest">Target Deadline</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/20" size={16} />
@@ -149,6 +176,9 @@ const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteG
           analyzedGoals.map((goal) => {
             const isCritical = goal.status === 'critical';
             const isUrgent = goal.status === 'urgent';
+            const isExpanded = expandedId === goal.id;
+            const isEditing = editingId === goal.id;
+            const isConfirmingDelete = confirmDeleteId === goal.id;
             
             return (
               <div 
@@ -163,7 +193,7 @@ const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteG
                         : 'border-l-cyan-500'
                 }`}
               >
-                <div className="flex items-center justify-between gap-4 relative z-10">
+                <div className="flex items-start justify-between gap-4 relative z-10">
                   <button 
                     onClick={() => onToggleGoal(goal.id)}
                     className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
@@ -177,40 +207,153 @@ const Goals: React.FC<GoalsProps> = ({ goals, onAddGoal, onToggleGoal, onDeleteG
                     <CheckCircle size={24} className={goal.completed ? 'scale-110' : 'scale-90 transition-transform group-hover:scale-100'} />
                   </button>
                   
-                  <div className="flex-1">
-                    <div className="flex items-center flex-wrap gap-2">
-                      <h3 className={`font-black uppercase tracking-tight text-base ${goal.completed ? 'line-through text-slate-400 dark:text-slate-600' : 'text-slate-900 dark:text-white'}`}>
-                        {goal.title}
-                      </h3>
-                      {!goal.completed && isCritical && (
-                        <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-red-600 text-white font-black uppercase">Overdue</span>
+                  <div className="flex-1 min-w-0" onClick={() => !isEditing && setExpandedId(isExpanded ? null : goal.id)}>
+                    <div className="flex flex-col gap-1">
+                      {isEditing ? (
+                        <input 
+                          autoFocus
+                          value={editData.title ?? goal.title}
+                          onChange={(e) => setEditData({...editData, title: e.target.value})}
+                          className="flex-1 bg-black/10 border-b border-cyan-500/50 text-base font-black uppercase text-slate-900 dark:text-white outline-none"
+                        />
+                      ) : (
+                        <h3 className={`font-black uppercase tracking-tight text-base ${isExpanded ? 'whitespace-normal' : 'truncate'} ${goal.completed ? 'line-through text-slate-400 dark:text-slate-600' : 'text-slate-900 dark:text-white'}`}>
+                          {goal.title}
+                        </h3>
                       )}
-                      {!goal.completed && isUrgent && (
-                        <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-amber-500 text-black font-black uppercase">Urgent</span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mt-2 text-[9px] font-mono">
-                      <div className={`flex items-center gap-1.5 ${isCritical ? 'text-red-600 dark:text-red-400' : isUrgent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-500 dark:text-slate-400'}`}>
-                        <Clock size={12} />
-                        <span className="uppercase tracking-widest font-bold">
-                          {goal.completed ? 'SECURED' : isCritical ? 'OVERDUE' : `${goal.daysLeft}d REMAINING`}
-                        </span>
-                      </div>
-                      <div className="text-slate-300 dark:text-white/10">|</div>
-                      <div className="text-slate-400 dark:text-slate-500 uppercase">
-                        {new Date(goal.deadline).toLocaleDateString()}
+                      
+                      {/* Secondary row with deadline and status tags - aligned for fixed collapsed height */}
+                      <div className="flex items-center gap-3 text-[9px] font-mono">
+                        <div className={`flex items-center gap-1.5 ${isCritical ? 'text-red-600 dark:text-red-400' : isUrgent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-500 dark:text-slate-400'}`}>
+                          <Clock size={12} />
+                          <span className="uppercase tracking-widest font-bold">
+                            {goal.completed ? 'SECURED' : isCritical ? 'OVERDUE' : `${goal.daysLeft}d REMAINING`}
+                          </span>
+                        </div>
+                        {!goal.completed && isCritical && (
+                          <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-red-600 text-white font-black uppercase shadow-sm">Overdue</span>
+                        )}
+                        {!goal.completed && isUrgent && (
+                          <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-amber-500 text-black font-black uppercase shadow-sm">Urgent</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <button 
-                    onClick={() => onDeleteGoal(goal.id)}
-                    className="p-3 text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    onClick={() => setExpandedId(isExpanded ? null : goal.id)}
+                    className="p-3 text-slate-400 hover:text-cyan-500 transition-colors"
                   >
-                    <Trash2 size={18} />
+                    {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                   </button>
                 </div>
+
+                {/* Expanded Section */}
+                {isExpanded && (
+                  <div className="mt-6 pt-6 border-t border-black/5 dark:border-white/5 space-y-5 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-4">
+                      {isEditing ? (
+                        <>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">Metadata</label>
+                            <textarea 
+                              value={editData.description ?? goal.description ?? ''}
+                              onChange={(e) => setEditData({...editData, description: e.target.value})}
+                              className="w-full bg-black/10 rounded-xl p-3 text-sm font-mono text-slate-900 dark:text-white outline-none min-h-[80px]"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">Deadline</label>
+                            <input 
+                              type="date"
+                              value={editData.deadline ?? goal.deadline}
+                              onChange={(e) => setEditData({...editData, deadline: e.target.value})}
+                              className="w-full bg-black/10 rounded-xl p-3 text-sm font-mono text-slate-900 dark:text-white outline-none"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {goal.description && (
+                            <div className="space-y-1">
+                              <label className="text-[8px] font-mono text-slate-400 uppercase tracking-widest">Objective Details</label>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-mono uppercase font-medium">
+                                {goal.description}
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 text-[9px] font-mono text-slate-500">
+                             <div className="flex items-center gap-1.5">
+                                <Calendar size={12} />
+                                <span className="uppercase">Initialized: {new Date(goal.createdAt).toLocaleDateString()}</span>
+                             </div>
+                             <div className="flex items-center gap-1.5">
+                                <Target size={12} />
+                                <span className="uppercase">Target: {new Date(goal.deadline).toLocaleDateString()} ({goal.daysLeft}d)</span>
+                             </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between items-center pt-2">
+                      <div className="flex gap-2">
+                        {isEditing ? (
+                          <>
+                            <button 
+                              onClick={() => handleEditSave(goal)}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg"
+                            >
+                              <Save size={14} /> Commit
+                            </button>
+                            <button 
+                              onClick={() => { setEditingId(null); setEditData({}); }}
+                              className="flex items-center gap-1.5 px-4 py-2 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400"
+                            >
+                              <X size={14} /> Cancel
+                            </button>
+                          </>
+                        ) : isConfirmingDelete ? (
+                          <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200 bg-red-500/10 p-2 px-3 rounded-2xl border border-red-500/20">
+                            <span className="text-[9px] font-black uppercase text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                              <AlertCircle size={12} /> Confirm Purge?
+                            </span>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => onDeleteGoal(goal.id)}
+                                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-[9px] font-black uppercase hover:bg-red-600 transition-colors"
+                              >
+                                Yes
+                              </button>
+                              <button 
+                                onClick={cancelDelete}
+                                className="px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase text-slate-500 hover:text-slate-900 transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => { setEditingId(goal.id); setEditData(goal); }}
+                            className="flex items-center gap-1.5 px-4 py-2 glass rounded-xl text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                          >
+                            <Edit3 size={14} /> Reconfigure
+                          </button>
+                        )}
+                      </div>
+                      
+                      {!isEditing && !isConfirmingDelete && (
+                        <button 
+                          onClick={() => setConfirmDeleteId(goal.id)}
+                          className="flex items-center gap-1.5 px-4 py-2 glass border-red-500/20 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={14} /> Purge
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })
