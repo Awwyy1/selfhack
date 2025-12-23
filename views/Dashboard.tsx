@@ -1,6 +1,5 @@
-
 import React, { useMemo, useState, useCallback } from 'react';
-import { UserStats, Hack } from '../types';
+import { UserStats, Hack, NavTab } from '../types';
 import { Trophy, Flame, Target, ChevronRight, Zap, Info, ArrowUpCircle, CheckCircle2, LayoutGrid, Star, TrendingUp, Quote, Activity, Battery, Crosshair, Brain } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -29,9 +28,10 @@ interface DashboardProps {
   hacks: Hack[];
   onUpgrade: () => void;
   onCheckIn: (data: { energy: number, focus: number, mood: number }) => void;
+  onNavigate: (tab: NavTab) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade, onCheckIn }) => {
+const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade, onCheckIn, onNavigate }) => {
   const isDark = document.documentElement.classList.contains('dark');
   const [isScanning, setIsScanning] = useState(false);
   const [checkInStep, setCheckInStep] = useState(0); // 0: hidden, 1: assessing, 2: scanning
@@ -204,10 +204,34 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade, onCheckI
 
         {/* Mini Metrics Row */}
         <div className="grid grid-cols-4 gap-3">
-          <MiniStat icon={<CheckCircle2 size={16} />} color="text-green-500" value={stats.hacksCompleted} label="Completed" />
-          <MiniStat icon={<LayoutGrid size={16} />} color="text-cyan-500" value={activeHacksCount} label="Active" />
-          <MiniStat icon={<TrendingUp size={16} />} color="text-fuchsia-500" value={`${avgProgress}%`} label="Rate" />
-          <MiniStat icon={<Flame size={16} className="fill-current" />} color="text-orange-500" value={stats.streak} label="Streak" />
+          <MiniStat 
+            icon={<CheckCircle2 size={16} />} 
+            color="text-green-500" 
+            value={stats.hacksCompleted} 
+            label="Completed" 
+            onClick={() => onNavigate(NavTab.STAT_COMPLETED)}
+          />
+          <MiniStat 
+            icon={<LayoutGrid size={16} />} 
+            color="text-cyan-500" 
+            value={activeHacksCount} 
+            label="Active" 
+            onClick={() => onNavigate(NavTab.STAT_ACTIVE)}
+          />
+          <MiniStat 
+            icon={<TrendingUp size={16} />} 
+            color="text-fuchsia-500" 
+            value={`${avgProgress}%`} 
+            label="Rate" 
+            onClick={() => onNavigate(NavTab.STAT_RATE)}
+          />
+          <MiniStat 
+            icon={<Flame size={16} className="fill-current" />} 
+            color="text-orange-500" 
+            value={stats.streak} 
+            label="Streak" 
+            onClick={() => onNavigate(NavTab.STAT_STREAK)}
+          />
         </div>
 
       </div>
@@ -309,7 +333,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, hacks, onUpgrade, onCheckI
                 <Zap size={22} className="text-cyan-600 dark:text-cyan-400" />
               </div>
               <div className="flex-1">
-                <h4 className="font-bold text-sm leading-tight mb-2 tracking-tight uppercase italic text-slate-900 dark:text-white">{hack.title}</h4>
+                <h4 className="font-black italic uppercase tracking-tight text-xl leading-none mb-3 text-slate-900 dark:text-white">{hack.title}</h4>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                     <div 
@@ -351,16 +375,19 @@ const AssessmentSlider: React.FC<{ icon: React.ReactNode, label: string, value: 
   </div>
 );
 
-const MiniStat: React.FC<{ icon: React.ReactNode, color: string, value: string | number, label: string }> = ({ icon, color, value, label }) => (
-  <div className="glass rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 bg-white/40 dark:bg-white/[0.02]">
-    <div className={`${color} opacity-80 mb-1`}>{icon}</div>
+const MiniStat: React.FC<{ icon: React.ReactNode, color: string, value: string | number, label: string, onClick?: () => void }> = ({ icon, color, value, label, onClick }) => (
+  <button 
+    onClick={onClick}
+    className="glass rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 bg-white/40 dark:bg-white/[0.02] hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all group"
+  >
+    <div className={`${color} opacity-80 mb-1 group-hover:scale-110 transition-transform`}>{icon}</div>
     <div className="text-sm font-orbitron font-black text-slate-900 dark:text-white leading-none">
       {value}
     </div>
     <div className="text-[8px] font-mono font-bold text-slate-400 dark:text-slate-600 uppercase tracking-tighter">
       {label}
     </div>
-  </div>
+  </button>
 );
 
 export default Dashboard;
