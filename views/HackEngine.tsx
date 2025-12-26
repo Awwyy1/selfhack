@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Zap, Loader2, Plus, CheckCircle2, ShieldAlert, ChevronRight, LayoutGrid, Terminal } from 'lucide-react';
 import { gemini } from '../services/geminiService';
@@ -8,9 +7,10 @@ interface HackEngineProps {
   hacks: Hack[];
   onAddHack: (hack: Hack) => void;
   onToggleTask: (hackId: string, taskId: string) => void;
+  userId?: string;
 }
 
-const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask }) => {
+const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask, userId }) => {
   const [mode, setMode] = useState<'list' | 'create'>('list');
   const [goal, setGoal] = useState('');
   const [loading, setLoading] = useState(false);
@@ -122,7 +122,7 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-orbitron font-black uppercase italic tracking-tighter text-gray-900 dark:text-white">System Hacks</h2>
-        <button 
+        <button
           onClick={() => setMode('create')}
           className="p-3 glass rounded-xl text-cyan-600 dark:text-cyan-400 border-black/5 dark:border-cyan-500/30 hover:bg-cyan-500/10 transition-all active:scale-90"
         >
@@ -132,34 +132,34 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
 
       {selectedHack ? (
         <div className="space-y-6 animate-in slide-in-from-bottom-4">
-          <button 
+          <button
             onClick={() => setSelectedHackId(null)}
             className="text-[10px] font-mono text-gray-400 dark:text-white/30 uppercase tracking-widest flex items-center gap-2 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             ← Back to Terminal
           </button>
-          
+
           <div className="glass rounded-3xl p-6 border-black/5 dark:border-cyan-500/20">
             <h3 className="text-2xl font-black italic uppercase tracking-tight mb-2 text-gray-900 dark:text-white">{selectedHack.title}</h3>
             <p className="text-sm text-gray-500 dark:text-white/50 mb-6">{selectedHack.description}</p>
-            
+
             <div className="space-y-3">
               {selectedHack.tasks.map((task) => (
                 <button
                   key={task.id}
                   onClick={() => onToggleTask(selectedHack.id, task.id)}
                   className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group ${
-                    task.completed 
-                      ? 'bg-green-500/10 border-green-500/30 opacity-60 animate-success' 
+                    task.completed
+                      ? 'bg-green-500/10 border-green-500/30 opacity-60'
                       : 'bg-white/80 dark:bg-white/5 border-black/5 dark:border-white/5 hover:border-cyan-500/30'
                   }`}
                 >
                   <div className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
-                    task.completed 
-                      ? 'bg-green-600 dark:bg-green-500 border-green-600 dark:border-green-500 text-white dark:text-black' 
+                    task.completed
+                      ? 'bg-green-600 dark:bg-green-500 border-green-600 dark:border-green-500 text-white dark:text-black'
                       : 'border-gray-300 dark:border-white/20 group-hover:border-cyan-500/50'
                   }`}>
-                    {task.completed && <CheckCircle2 size={16} className="animate-check" />}
+                    {task.completed && <CheckCircle2 size={16} />}
                   </div>
                   <div className="flex-1">
                     <p className={`text-sm font-bold transition-all ${task.completed ? 'line-through text-gray-400 dark:text-white/40' : 'text-gray-900 dark:text-white'}`}>{task.title}</p>
@@ -176,7 +176,7 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {hacks.map(hack => (
-            <div 
+            <div
               key={hack.id}
               onClick={() => setSelectedHackId(hack.id)}
               className="glass rounded-2xl p-5 flex items-center gap-5 hover:border-black/10 dark:hover:border-cyan-500/30 transition-all cursor-pointer group active:scale-[0.98]"
@@ -188,8 +188,8 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
                 <h4 className="font-black italic uppercase tracking-tight text-lg leading-none mb-2 text-gray-900 dark:text-white">{hack.title}</h4>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)] transition-all duration-700" 
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)] transition-all duration-700"
                       style={{ width: `${hack.progress}%` }}
                     />
                   </div>
@@ -199,12 +199,12 @@ const HackEngine: React.FC<HackEngineProps> = ({ hacks, onAddHack, onToggleTask 
               <ChevronRight size={20} className="text-gray-300 dark:text-white/10 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
             </div>
           ))}
-          
+
           {hacks.length === 0 && (
             <div className="p-16 text-center glass rounded-3xl border-dashed border-black/10 dark:border-white/10 flex flex-col items-center gap-4">
               <ShieldAlert className="text-gray-200 dark:text-white/10" size={48} />
               <p className="text-gray-400 dark:text-white/30 text-xs italic font-mono uppercase tracking-[0.2em]">Zero hacks active. Initialize protocol.</p>
-              <button 
+              <button
                 onClick={() => setMode('create')}
                 className="mt-2 px-6 py-2 glass border-black/10 dark:border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-black uppercase tracking-widest hover:bg-cyan-500/10"
               >
